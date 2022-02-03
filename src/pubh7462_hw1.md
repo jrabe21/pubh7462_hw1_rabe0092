@@ -19,7 +19,7 @@ This report contains answers to two problems for PUBH 7462 Homework 1.
 The first problem focuses on best practices and style in R by using the
 tidyverse to make some simple data transformations to a random sample
 and plotting the results on a basic scatter plot. The second problem
-invlves some EDA with a dataset containing measurements of penguins
+involves some EDA with a data set containing measurements of penguins
 captured in Antarctica.
 
 # Problem 2. Best Practices and Consistent Style
@@ -49,7 +49,7 @@ str(normsum.df)
 #Now lets plot the data
 ggplot(data = normsum.df, aes(x = x, y = y, color = sum_indicator)) +
   geom_point() +
-  labs(title = "Scatterplot of y ~ x") +
+  labs(title = "Scatter plot of y ~ x") +
   scale_color_brewer(palette = "Accent", "Is x + y > 0.5?" )
 ```
 
@@ -77,7 +77,7 @@ The variables are as follows:
     Gentoo) of penguin being measured
 
 -   *island* refers to the island (Biscoe, Dream, Torgersen) the penguin
-    was captured on, which can be
+    was captured on
 
 -   *bill_length_mm* refers to the bill length in millimeters of the
     penguin being measured
