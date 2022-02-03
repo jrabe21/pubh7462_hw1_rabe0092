@@ -1,0 +1,162 @@
+---
+title: "PUBH 7462 Homework 1"
+author: "Jack Rabe"
+date: "1/31/2022"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 3
+---
+
+# Preamble
+
+This report contains answers to two problems for PUBH 7462 Homework 1. The first problem focuses on best practices and style in R by using the tidyverse to make some simple data transformations to a random sample and plotting the results on a basic scatter plot. The second problem invlves some EDA with a dataset containing measurements of penguins captured in Antarctica.
+
+
+```{r setup, include=FALSE}
+#Load all the good stuff
+library(tidyverse)
+
+#Working directory for .RMD
+knitr::opts_knit$set(echo = TRUE,
+                     root.dir = rprojroot::find_rstudio_root_file())
+
+#Controlling figure output in markdown
+knitr::opts_chunk$set(
+#  fig.height =   
+  fig.width = 6,
+#  fig.asp = .5,
+  out.width = "90%",
+#  out.height = 
+ fig.align = "center",
+  cache = FALSE,
+  echo  = TRUE
+)
+
+#Set Themes for ggplot2 - centers title and legend at bottom by default and edit background
+theme_set(theme(plot.title = element_text(hjust = 0.5),
+                legend.position = "bottom", 
+                panel.grid.major = element_blank(), 
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(), 
+                axis.line = element_line(colour = "black"))
+)
+
+
+#Set Scientific notation output and decimal places for knitr
+options(scipen = 999)
+options(digits = 4)
+```
+
+
+
+# Problem 2. Best Practices and Consistent Style
+
+## Problem 2.1 Independent Bivariate Normal Random Sample
+
+```{r, results = 'hide'}
+#create a tibble with two randomly sampled variables based on normal distributions and a third logical variable based on the summation of the two random variables
+normsum.df <- tibble(
+x = rnorm(1000, mean = 0, sd = 1), 
+y = rnorm(1000, mean = 1, sd = 2),
+sum_indicator = ifelse(x + y > 0.5, TRUE, FALSE)
+)
+
+#mutate sum_indicator variable into a factor with two levels, "yes" and "no," with "yes" preceding "no"
+#using tidyverse
+normsum.df <- normsum.df %>% 
+  mutate(sum_indicator = as.factor(ifelse(sum_indicator == TRUE, "Yes", "No")))
+
+normsum.df$sum_indicator <- forcats::fct_relevel(normsum.df$sum_indicator, "Yes") # reorder so "Yes" comes before "No"
+
+#check that it worked  
+str(normsum.df)
+```
+
+
+
+```{r}
+#Now lets plot the data
+ggplot(data = normsum.df, aes(x = x, y = y, color = sum_indicator)) +
+  geom_point() +
+  labs(title = "Scatterplot of y ~ x") +
+  scale_color_brewer(palette = "Accent", "Is x + y > 0.5?" )
+```
+
+
+## Problem 2.2 Penguin EDA
+
+```{r}
+#load in the data
+penguin.df <- read_rds("./data/penguin.RDS")
+```
+
+
+### Problem 2.2.1 Data Description
+
+Each observation in the **penguins** data set represents size measurements for adult foraging penguins near Palmer Station,
+Antarctica.
+
+There are `r nrow(penguin.df)` observations in the **penguins** data set with `r ncol(penguin.df)` variables.
+
+
+The variables are as follows:
+
+- *species* of course refers to the species (`r levels(penguin.df$species)`) of penguin being measured
+
+- *island* refers to the island (`r levels(penguin.df$island)`) the penguin was captured on, which can be
+
+- *bill_length_mm* refers to the bill length in millimeters of the penguin being measured
+
+- *bill_depth_mm* refers to the bill depth in millimeters of the penguin being measured
+
+- *flipper_length_mm* refers to the flipper length in millimeters of the penguin being measured
+
+- *body_mass_g* refers to the body mass in grams of the penguin being measured
+
+- *sex* refers to the sex (`r levels(penguin.df$sex)`) of the penguin being measured
+
+
+The mean flipper length (mm) of measured penguins is `r round(mean(penguin.df$flipper_length_mm, na.rm = TRUE), 1)` with a standard deviation of `r round(sd(penguin.df$flipper_length_mm, na.rm = TRUE), 1)`.
+
+The mean bill length (mm) of measured penguins is `r round(mean(penguin.df$bill_length_mm, na.rm = TRUE), 1)` with a standard deviation of `r round(sd(penguin.df$bill_length_mm, na.rm = TRUE), 1)`.
+
+
+### Problem 2.2.2 Visualization
+
+```{r, warning = FALSE, message = FALSE}
+#lets generate a plot comparing bill length with flipper length across species
+peng_flipbill.gg <- penguin.df %>% 
+ggplot(aes(x = bill_length_mm, y = flipper_length_mm)) +
+  geom_point(aes(color = species)) +
+  labs(title = "Relationship between bill length and flipper length \nin adult penguins near Palmer Station, Antarctica",
+       x = "Bill length (mm)",
+       y = "Flipper length (mm)") +
+  scale_color_brewer(palette = "Dark2", "Species")
+  
+peng_flipbill.gg  
+```
+
+
+In general, broad trends indicate that as penguin bill length increases, so to does flipper length. However, there's quite a bit of variation between species. For instance, Adelie penguins tend to have much shorter bills that Chinstrap or Gentoo penguins. Adelie penguins also have the shortest flippers, however, Chinstrap penguins appear to have very short flippers as well. Interestingly, while Chinstrap penguins have short flippers, they have very long bills. Gentoo penguins have the longest flippers and a similar bill length to Chinstrap penguins. 
+
+What I find most fascinating, is that there's very little overlap between penguin species when looking at bill length and flipper length together, which could suggest why they are classified as distinct species and that there could be some really cool underlying reasons for such morphological differences, like niche partitioning (e.g., Galapagos finches and tortoises).
+
+
+```{r warning = FALSE, message = FALSE}
+#now create the same plot but add sex
+peng_flipbill.gg +
+  facet_wrap(~sex)
+```
+
+
+Again, we see the same patterns as described in the previous plot in terms of species differences. What this plot demonstrates is that female penguins have consistently shorter bills and flippers than male penguins. We also see that sex was not determined for a few individuals, so we could redo this plot without NAs to only compare known males and females.
+
+
+
+```{r, include = FALSE}
+
+sessionInfo()
+```
+
+
